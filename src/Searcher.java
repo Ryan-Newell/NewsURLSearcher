@@ -1,37 +1,53 @@
 
 import javax.net.ssl.HttpsURLConnection;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
+/**
+ * TODO: remove duplicates
+ */
 class Searcher {
+    /**
+     * Main function. Runs the searches and writes the results to file
+     * @param args takes no parameters
+     * @throws IOException If the connection fails
+     */
     public static void main(String[] args) throws IOException {
-        String[] newsStrings= {"https://www.cnn.com", "https://abcnews.go.com"};
-        String[] keywords = {"trump", "georgia"};
-
+        List<String> newsStrings= getArrayFromFile("websites.txt");
+        List<String> keywords = getArrayFromFile("keywords.txt");
+        File outFile = new File("src/results.txt");
+        FileWriter writer = new FileWriter(outFile);
         for (String website : newsStrings) {
             System.out.println("\n" + website);
+            writer.write("\n" + website + "\n");
             String finalString = getHTML(website);
             List<String> results = extractUrls(finalString);
             for (String keyword : keywords) {
-                List<String> keywordResults = keywordSearch(results, keyword);
+                List<String> keywordResults = keywordSearch(results, keyword.toLowerCase());
                 System.out.println(keyword);
+                writer.write(keyword + "\n");
                 for (String item : keywordResults) {
                     System.out.println(item);
+                    writer.write(item + "\n");
                 }
             }
         }
+        writer.close();
     }
 
+    /**
+     * Performs a get request on a website and returns the HTML as a string
+     * @param website the website. Expected to be the home page of a news site
+     * @return The HTML as a string of the website
+     * @throws IOException If the connection fails
+     */
     public static String getHTML(String website) throws IOException {
         URL url = new URL(website);
         HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
@@ -53,8 +69,9 @@ class Searcher {
 
     /**
      * From: https://stackoverflow.com/questions/5713558/detect-and-extract-url-from-a-string
-     * Parsing links is more difficult than I anticipated
-     * Returns a list with all links contained in the input
+     * Parsing links correctly is more difficult than I anticipated
+     * @param text the HTML string
+     * @return a list with all links contained in the input
      */
     public static List<String> extractUrls(String text)
     {
@@ -72,6 +89,12 @@ class Searcher {
         return containedUrls;
     }
 
+    /**
+     * Searches the list of urls for the given keyword
+     * @param urls the input list of urls
+     * @param keyword the keyword to be searched
+     * @return a list of urls that contain the input keyword
+     */
     public static List<String> keywordSearch (List<String> urls, String keyword) {
         List<String> keywordHits = new ArrayList<String>();
         for (String item : urls) {
@@ -80,5 +103,27 @@ class Searcher {
             }
         }
         return keywordHits;
+    }
+
+    /**
+     * Takes the file provided and creates a list of entries. Expects file to be line delimited.
+     * @param filename the name of the file to be read
+     * @return the array of items from the file
+     */
+    private static List<String> getArrayFromFile (String filename) {
+        List<String> arrayList = new ArrayList<String>();
+        File file = new File("src/" + filename);
+
+        try {
+            Scanner sc = new Scanner(file);
+            while(sc.hasNext()) {
+                arrayList.add(sc.next());
+            }
+            return arrayList;
+        }
+        catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return arrayList;
     }
 }
