@@ -3,15 +3,15 @@ import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * TODO: remove duplicates
+ * Takes in a list of websites from websites.txt and a list of keywords from keywords.txt. Searches the websites for
+ * URLs, then finds links with the relevant keyword. Outputs results to results.txt and system. 
+ * Note that most news sites use keywords in their URL names, but other sites just use random alphanumeric strings,
+ * so this program will not do anything with those types of URLs.
  */
 class Searcher {
     /**
@@ -75,6 +75,7 @@ class Searcher {
      */
     public static List<String> extractUrls(String text)
     {
+        Set<String> set = new LinkedHashSet<>();
         List<String> containedUrls = new ArrayList<String>();
         String urlRegex = "((https?|ftp|gopher|telnet|file):((//)|(\\\\))+[\\w\\d:#@%/;$()~_?\\+-=\\\\\\.&]*)";
         Pattern pattern = Pattern.compile(urlRegex, Pattern.CASE_INSENSITIVE);
@@ -85,7 +86,9 @@ class Searcher {
             containedUrls.add(text.substring(urlMatcher.start(0),
                     urlMatcher.end(0)));
         }
-
+        set.addAll(containedUrls);
+        containedUrls.clear();
+        containedUrls.addAll(set);
         return containedUrls;
     }
 
@@ -111,6 +114,7 @@ class Searcher {
      * @return the array of items from the file
      */
     private static List<String> getArrayFromFile (String filename) {
+        Set<String> set = new LinkedHashSet<>();
         List<String> arrayList = new ArrayList<String>();
         File file = new File("src/" + filename);
 
@@ -119,6 +123,9 @@ class Searcher {
             while(sc.hasNext()) {
                 arrayList.add(sc.next());
             }
+            set.addAll(arrayList);
+            arrayList.clear();
+            arrayList.addAll(set);
             return arrayList;
         }
         catch (FileNotFoundException e) {
